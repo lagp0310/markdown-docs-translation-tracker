@@ -3,8 +3,9 @@ var fs = require("fs");
 var path = require("path");
 var os = require("os");
 
-// TODO: Configuration in JSON file with default adaptable config.
 // TODO: Percentage coverage in each file for each detected language.
+// TODO: Regexp matching for file names.
+// TODO: Implementation of each parameter when reading files (i.e. onlyFileFormats).
 
 /**
  * Global Configuration.
@@ -79,6 +80,11 @@ var tableFilenameDirectory = "./";
 var tableFilename = "Table.md";
 
 /**
+ * Default filename for configuration file.
+ */
+var configFilename = "config.json";
+
+/**
  * Global Variables.
  */
 
@@ -86,6 +92,16 @@ var tableFilename = "Table.md";
  * File List from docsRootPath.
  */
 var fileList = [];
+
+/**
+ * Read the config file.
+ * 
+ * @param {*} filename 
+ */
+function readJSONConfigFile(filename = configFilename) {
+    var config = fs.readFileSync(filename, { encoding: "utf8", flag: "r" });
+    return JSON.parse(config);
+}
 
 /**
  * This will setup the application with provided arguments.
@@ -102,22 +118,83 @@ var fileList = [];
  * @param {*} tableFilename 
  * @param {*} defaultTableHeader 
  */
-function setup(root = "./", recursive = true, directoriesToExclude = [], filesToExclude = [], fileFormatsToExclude = [], onlyFileFormats = [], onlyLanguages = [], 
-                languagesToExclude = [], limitResultsTo = -1, tableFilenameDirectory = "./", tableFilename = "Table.md", 
-                defaultTableHeader = "| Filename | Languages\n|---|---|\n") {
-    // TODO: Check conditions here.
-    docsRootPath = root;
-    recursive = recursive;
-    directoriesToExclude = directoriesToExclude;
-    filesToExclude = filesToExclude;
-    fileFormatsToExclude = fileFormatsToExclude;
-    onlyFileFormats = onlyFileFormats;
-    onlyLanguages = onlyLanguages;
-    languagesToExclude = languagesToExclude;
-    limitResultsTo = limitResultsTo;
-    tableFilename = tableFilename;
-    defaultTableHeader = defaultTableHeader;
-    tableFilenameDirectory = tableFilenameDirectory;
+function setup(filename = configFilename) {
+    var jsonConfig = readJSONConfigFile(filename);
+
+    // Check arguments provided in configuration file.
+    if(!fs.existsSync(jsonConfig.docsRootPath)) {
+        console.error(jsonConfig.docsRootPath + " does not exist.");
+        return false;
+    }
+
+    if(typeof recursive != "boolean") {
+        console.error(jsonConfig.recursive + " must be a boolean.");
+        return false;
+    }
+
+    if(typeof directoriesToExclude != "object") {
+        console.error(jsonConfig.recursive + " must be an object.");
+        return false;
+    }
+
+    if(typeof filesToExclude != "object") {
+        console.error(jsonConfig.recursive + " must be an object.");
+        return false;
+    }
+
+    if(typeof fileFormatsToExclude != "object") {
+        console.error(jsonConfig.recursive + " must be an object.");
+        return false;
+    }
+
+    if(typeof onlyFileFormats != "object") {
+        console.error(jsonConfig.recursive + " must be an object.");
+        return false;
+    }
+
+    if(typeof onlyLanguages != "object") {
+        console.error(jsonConfig.recursive + " must be an object.");
+        return false;
+    }
+
+    if(typeof languagesToExclude != "object") {
+        console.error(jsonConfig.recursive + " must be an object.");
+        return false;
+    }
+
+    if(typeof limitResultsTo != "number") {
+        console.error(jsonConfig.recursive + " must be an object.");
+        return false;
+    }
+
+    if(typeof defaultTableHeader != "string") {
+        console.error(jsonConfig.recursive + " must be an object.");
+        return false;
+    }
+
+    if(typeof tableFilenameDirectory != "string") {
+        console.error(jsonConfig.recursive + " must be an object.");
+        return false;
+    }
+
+    if(typeof tableFilename != "string") {
+        console.error(jsonConfig.recursive + " must be an object.");
+        return false;
+    }
+
+    // Set configuration parameters.
+    docsRootPath = jsonConfig.docsRootPath;
+    recursive = jsonConfig.recursive;
+    directoriesToExclude = jsonConfig.directoriesToExclude;
+    filesToExclude = jsonConfig.filesToExclude;
+    fileFormatsToExclude = jsonConfig.fileFormatsToExclude;
+    onlyFileFormats = jsonConfig.onlyFileFormats;
+    onlyLanguages = jsonConfig.onlyLanguages;
+    languagesToExclude = jsonConfig.languagesToExclude;
+    limitResultsTo = jsonConfig.limitResultsTo;
+    defaultTableHeader = jsonConfig.defaultTableHeader;
+    tableFilenameDirectory = jsonConfig.tableFilenameDirectory;
+    tableFilename = jsonConfig.tableFilename;
 
     return true;
 }
@@ -263,8 +340,8 @@ function writeMarkdownToFile(dir = "./", filename = tableFilename, data = "No da
 }
 
 // Testing.
-setup("../docs/src", limitResultsTo = 5, onlyLanguages = ["eng", "spa"], filesToExclude = [".gitkeep", ".gitignore"], 
-fileFormatsToExclude = [".mp4", ".ico", ".svg", ".js", ".jpg", ".png", ".vue", ".gif", ".styl", ".json", ".scss"]);
+/*setup("../docs/src", limitResultsTo = 5, onlyLanguages = ["eng", "spa"], filesToExclude = [".gitkeep", ".gitignore"], 
+fileFormatsToExclude = [".mp4", ".ico", ".svg", ".js", ".jpg", ".png", ".vue", ".gif", ".styl", ".json", ".scss"]);*/
 
 /**
  * Make the whole process of analyzing files, detecting languages, 
@@ -289,4 +366,5 @@ function findAndDetect() {
     return true;
 }
 
-findAndDetect();
+setup();
+//findAndDetect();
