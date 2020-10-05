@@ -1,15 +1,19 @@
 var franc = require("franc");
 var fs = require("fs");
 var path = require("path");
-var os = require("os");
 
 // TODO: Percentage coverage in each file for each detected language.
+// TODO: Additionally to percentage in coverage, we should show how many words there are for each detected language (configurable how many languages are shown).
 // TODO: Regexp matching for file names.
-// TODO: Implementation of each parameter when reading files (i.e. onlyFileFormats).
 
 /**
  * Global Configuration.
  */
+
+/**
+ * Default filename for configuration file.
+ */
+var configFilename = "config.json";
 
 /**
  * Root path for documentation.
@@ -35,11 +39,17 @@ var filesToExclude = [];
 
 /**
  * Which file formats to exclude from analysis.
+ * 
+ * **Note**: When onlyFileFormats is set, this parameter will be [].
  */
 var fileFormatsToExclude = [];
 
 /**
  * Only work with files with these file formats.
+ * 
+ * **Note**: This parameter will have higher priority when setting both, 
+ * fileFormatsToExclude and onlyFileFormats, so setting this parameter 
+ * will make fileFormatsToExclude equal to [].
  */
 var onlyFileFormats = [];
 
@@ -78,11 +88,6 @@ var tableFilenameDirectory = "./";
  * Default filename to write the Markdown table.
  */
 var tableFilename = "Table.md";
-
-/**
- * Default filename for configuration file.
- */
-var configFilename = "config.json";
 
 /**
  * Global Variables.
@@ -182,6 +187,15 @@ function setup(filename = configFilename) {
         return false;
     }
 
+    // Check configuration and set default values where required.
+    if(onlyFileFormats.length > 0) {
+        fileFormatsToExclude = [];
+    }
+
+    if(onlyLanguages.length > 0) {
+        languagesToExclude = [];
+    }
+
     // Set configuration parameters.
     docsRootPath = jsonConfig.docsRootPath;
     recursive = jsonConfig.recursive;
@@ -224,6 +238,28 @@ function isFileToBeExcludedByFormat(format) {
 }
 
 /**
+ * Check whether or not this file format will be included.
+ * 
+ * @param {*} format 
+ */
+function isFileFormatToBeIncluded(format) {
+    return !(onlyFileFormats.find((value, index, array) => {
+        return value === format;
+    }) === undefined);
+}
+
+/**
+ * Check whether or not this directory will be excluded.
+ * 
+ * @param {*} dirname 
+ */
+function isDirectoryToBeExcluded(dirname) {
+    return !(directoriesToExclude.find((value, index, array) => {
+        return value === dirname;
+    }) === undefined);
+}
+
+/**
  * Get the file list for root directory and subdirectories (if any).
  * 
  * @param {*} relativeRootPath 
@@ -243,14 +279,22 @@ function getFileList(relativeRootPath = docsRootPath, ...joinPath) {
     dirsAndFiles = fs.readdirSync(completePath, { encoding: "utf8", withFileTypes: true }) || [];
 
     dirsAndFiles.forEach((element, index, array) => {
-        if(element.isDirectory()) {
+        if(element.isDirectory() && 
+            recursive === true && 
+            !isDirectoryToBeExcluded(element.name)) {
             getFileList(completePath, element.name);
         } else if(element.isFile()) {
-            if(!isFileToBeExcludedByFilename(path.basename(element.name)) && 
-                !isFileToBeExcludedByFormat(path.extname(element.name))) {
+            // Check for file formats to be included first.
+            if(onlyFileFormats.length > 0 && isFileFormatToBeIncluded(path.extname(element.name))) {
                 fileList.push(path.join(completePath, element.name));
             } else {
-                console.log("Ignoring: " + element.name + " (excluded).")
+                // Check for filenames and file formats to be excluded.
+                if(!isFileToBeExcludedByFilename(path.basename(element.name)) && 
+                    !isFileToBeExcludedByFormat(path.extname(element.name))) {
+                    fileList.push(path.join(completePath, element.name));
+                } else {
+                    console.log("Ignoring: " + element.name + " (excluded).")
+                }
             }
         } else {
             console.warn("Ignoring: " + element.name + " (not a directory or file).");
@@ -264,13 +308,6 @@ function getFileList(relativeRootPath = docsRootPath, ...joinPath) {
  * @param {*} file - The file to read the content from.
  */
 function getFileContent(file) {
-    /*fs.readFile(file, { encoding: "utf8", flag: "r" }, (err, data) => {
-        if(err) {
-            return console.error(err);
-        }
-        
-        return data;
-    });*/
     return fs.readFileSync(file, { encoding: "utf8", flag: "r" });
 }
 
@@ -366,5 +403,4 @@ function findAndDetect() {
     return true;
 }
 
-setup();
-//findAndDetect();
+findAndDetect();
