@@ -1,9 +1,12 @@
-var franc = require("franc");
 var fs = require("fs");
 var path = require("path");
+var franc = require("franc");
+var iso6393 = require('iso-639-3');
 
+// TODO: Order languages, for example, first English and then others.
 // TODO: Percentage coverage in each file for each detected language.
 // TODO: Additionally to percentage in coverage, we should show how many words there are for each detected language (configurable how many languages are shown).
+// TODO: Implement function to exclude some text from the file (i.e. comments which needs to remain in English, or fragments with badges which are also English only).
 // TODO: Regexp matching for file names.
 
 /**
@@ -285,11 +288,12 @@ function getFileList(relativeRootPath = docsRootPath, ...joinPath) {
             getFileList(completePath, element.name);
         } else if(element.isFile()) {
             // Check for file formats to be included first.
-            if(onlyFileFormats.length > 0 && isFileFormatToBeIncluded(path.extname(element.name))) {
+            if(isFileFormatToBeIncluded(path.extname(element.name))) {
                 fileList.push(path.join(completePath, element.name));
             } else {
                 // Check for filenames and file formats to be excluded.
-                if(!isFileToBeExcludedByFilename(path.basename(element.name)) && 
+                if(onlyFileFormats.length == 0 &&
+                    !isFileToBeExcludedByFilename(path.basename(element.name)) && 
                     !isFileToBeExcludedByFormat(path.extname(element.name))) {
                     fileList.push(path.join(completePath, element.name));
                 } else {
@@ -309,6 +313,34 @@ function getFileList(relativeRootPath = docsRootPath, ...joinPath) {
  */
 function getFileContent(file) {
     return fs.readFileSync(file, { encoding: "utf8", flag: "r" });
+}
+
+/**
+ * Get long name languages. By default, franc returns ISO-639-3 (language represented by
+ * three letter code), so we need to get something like "English" or "Spanish" which is 
+ * more human-readable in tables.
+ * 
+ * @param {*} languagesArray 
+ */
+function getLongNameLanguages(languagesArray) {
+    if(typeof languagesArray != "object" || languagesArray.length === 0) {
+        console.error("You must provide an array with languages.");
+        return [];
+    }
+
+    var longNameLanguage = null;
+
+    languagesArray.forEach((element, index, array) => {
+        longNameLanguage = iso6393.find((value, index, array) => {
+            return value.iso6393 === element[0];
+        });
+
+        if(typeof longNameLanguage == "object") {
+            element[0] = longNameLanguage.name;
+        } else {
+            console.warn("Language: " + element[0] + " not found. Returning \'undefined\' for it.");
+        }
+    });
 }
 
 /**
@@ -360,7 +392,7 @@ function produceMarkdownTable(filesArray, tableHeader = defaultTableHeader) {
 
     // Get each file to build the table.
     filesArray.forEach((element, index, array) => {
-        table += "|[" + path.basename(element[0]) + "](" + element[0] + ")|" + element[1][0] + "|\n"
+        table += "|[" + path.basename(element[0]) + "](" + element[0] + ")|" + element[1][0][0] + "|\n"
     });
 
     return table;
@@ -376,10 +408,6 @@ function writeMarkdownToFile(dir = "./", filename = tableFilename, data = "No da
     return fs.writeFileSync(path.join(dir, filename), data, { encoding: "utf8", mode: 0o666, flag: "w" });
 }
 
-// Testing.
-/*setup("../docs/src", limitResultsTo = 5, onlyLanguages = ["eng", "spa"], filesToExclude = [".gitkeep", ".gitignore"], 
-fileFormatsToExclude = [".mp4", ".ico", ".svg", ".js", ".jpg", ".png", ".vue", ".gif", ".styl", ".json", ".scss"]);*/
-
 /**
  * Make the whole process of analyzing files, detecting languages, 
  * building the Markdown table and writing it to a file.
@@ -393,6 +421,7 @@ function findAndDetect() {
     list.forEach((element, index, array) => {
         content = getFileContent(element);
         languages = getLanguages(content);
+        longNameLanguages = getLongNameLanguages(languages);
         fileList.push([element, languages]);
     });
 
@@ -403,4 +432,5 @@ function findAndDetect() {
     return true;
 }
 
+setup(configFilename);
 findAndDetect();

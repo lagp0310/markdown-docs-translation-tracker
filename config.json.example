@@ -1,0 +1,14 @@
+{
+    "docsRootPath": "../docs/src",
+    "recursive": true,
+    "directoriesToExclude": [],
+    "filesToExclude": [".gitkeep"],
+    "fileFormatsToExclude": [".svg", ".vue", ".ico", ".png", ".styl", ".json", ".jpg", ".gif", ".scss", ".js", ".mp4", ".html", ".css"],
+    "onlyFileFormats": [".md"],
+    "onlyLanguages": ["spa", "eng"],
+    "languagesToExclude": [],
+    "limitResultsTo": -1,
+    "defaultTableHeader": "| Filename | Language\n|---|---|\n",
+    "tableFilenameDirectory": "./",
+    "tableFilename": "Table.md"
+}

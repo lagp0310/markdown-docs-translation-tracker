@@ -9,6 +9,7 @@
   "author": "Luis Alberto",
   "license": "MIT",
   "dependencies": {
-    "franc": "^5.0.0"
+    "franc": "^5.0.0",
+    "iso-639-3": "^2.1.0"
   }
 }
