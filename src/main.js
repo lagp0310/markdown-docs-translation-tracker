@@ -1,6 +1,10 @@
 var franc = require("franc");
 var fs = require("fs");
 var path = require("path");
+var os = require("os");
+
+// TODO: Configuration in JSON file with default adaptable config.
+// TODO: Percentage coverage in each file for each detected language.
 
 /**
  * Global Configuration.
@@ -9,7 +13,7 @@ var path = require("path");
 /**
  * Root path for documentation.
  * 
- * **Note**: This is seen from the project's root path.
+ * **Note**: This is taken from the project's root path.
  */
 var docsRootPath = null;
 
@@ -19,9 +23,9 @@ var docsRootPath = null;
 var recursive = true;
 
 /**
- * Which folders to exclude from analysis.
+ * Which directories to exclude from analysis.
  */
-var foldersToExclude = [];
+var directoriesToExclude = [];
 
 /**
  * Which files to exclude from analysis.
@@ -32,6 +36,11 @@ var filesToExclude = [];
  * Which file formats to exclude from analysis.
  */
 var fileFormatsToExclude = [];
+
+/**
+ * Only work with files with these file formats.
+ */
+var onlyFileFormats = [];
 
 /**
  * Which languages to use for franc.
@@ -57,21 +66,17 @@ var limitResultsTo = -1;
 /**
  * Default table header to produce a Markdown table.
  */
-var defaultTableHeader = "| Location | Filename | Languages\n|---|---|---|\n";
+var defaultTableHeader = "| Filename | Languages\n|---|---|\n";
 
 /**
- * Global Constants.
+ * Default directory in which to save the generated Markdown file.
  */
+var tableFilenameDirectory = "./";
 
 /**
- * TODO: Check this in Node.js docs.
+ * Default filename to write the Markdown table.
  */
-const FILE_TYPE_ID = 1;
-
-/**
- * TODO: Check this in Node.js docs.
- */
-const DIR_TYPE_ID = 2;
+var tableFilename = "Table.md";
 
 /**
  * Global Variables.
@@ -86,40 +91,94 @@ var fileList = [];
  * This will setup the application with provided arguments.
  * 
  * @param {*} root 
- * @param {*} foldersToExclude 
+ * @param {*} recursive 
+ * @param {*} directoriesToExclude 
  * @param {*} filesToExclude 
  * @param {*} fileFormatsToExclude 
- * @param {*} languages 
+ * @param {*} onlyFileFormats 
+ * @param {*} onlyLanguages 
+ * @param {*} languagesToExclude 
+ * @param {*} limitResultsTo 
+ * @param {*} tableFilename 
+ * @param {*} defaultTableHeader 
  */
-function setup(root = "./", recursive = true, foldersToExclude = [], filesToExclude = [], fileFormatsToExclude = [], onlyLanguages = [], 
-                languagesToExclude = [], limitResultsTo = -1) {
+function setup(root = "./", recursive = true, directoriesToExclude = [], filesToExclude = [], fileFormatsToExclude = [], onlyFileFormats = [], onlyLanguages = [], 
+                languagesToExclude = [], limitResultsTo = -1, tableFilenameDirectory = "./", tableFilename = "Table.md", 
+                defaultTableHeader = "| Filename | Languages\n|---|---|\n") {
     // TODO: Check conditions here.
     docsRootPath = root;
     recursive = recursive;
-    foldersToExclude = foldersToExclude;
+    directoriesToExclude = directoriesToExclude;
     filesToExclude = filesToExclude;
     fileFormatsToExclude = fileFormatsToExclude;
+    onlyFileFormats = onlyFileFormats;
     onlyLanguages = onlyLanguages;
     languagesToExclude = languagesToExclude;
     limitResultsTo = limitResultsTo;
+    tableFilename = tableFilename;
+    defaultTableHeader = defaultTableHeader;
+    tableFilenameDirectory = tableFilenameDirectory;
 
-    // TODO: Return object with configuration?
     return true;
 }
 
 /**
- * Get the file list for docsRootPath.
+ * Check whether or not this file will be excluded from fileList
+ * (by filename).
+ * 
+ * @param {*} filename 
  */
-function getFileList() {
-    // var fileList = fs.readdirSync(docsRootPath, { encoding: "utf8", withFileTypes: true }, (err, files) => {
-    //     if(err) {
-    //         return console.error("Couldn't read files from: " + docsRootPath + ".");
-    //     }
+function isFileToBeExcludedByFilename(filename) {
+    return !(filesToExclude.find((value, index, array) => {
+        return value === filename;
+    }) === undefined);
+}
 
-    //     fileList = files;
-    // });
-    // TODO: Add recursivity.
-    return fs.readdirSync(docsRootPath, { encoding: "utf8", withFileTypes: true });
+/**
+ * Check whether or not this file will be excluded from fileList 
+ * (by format or extension).
+ * 
+ * @param {*} format 
+ */
+function isFileToBeExcludedByFormat(format) {
+    return !(fileFormatsToExclude.find((value, index, array) => {
+        return value === format;
+    }) === undefined);
+}
+
+/**
+ * Get the file list for root directory and subdirectories (if any).
+ * 
+ * @param {*} relativeRootPath 
+ * @param  {...any} joinPath 
+ */
+function getFileList(relativeRootPath = docsRootPath, ...joinPath) {
+    var completePath = relativeRootPath, dirsAndFiles = null;
+
+    // Check if joinPath argument was provided.
+    if(typeof joinPath == "object" && joinPath.length > 0) {
+        joinPath.forEach((element, index, array) => {
+            completePath = path.join(completePath, element);
+        });
+    }
+
+    // Read the root directory.
+    dirsAndFiles = fs.readdirSync(completePath, { encoding: "utf8", withFileTypes: true }) || [];
+
+    dirsAndFiles.forEach((element, index, array) => {
+        if(element.isDirectory()) {
+            getFileList(completePath, element.name);
+        } else if(element.isFile()) {
+            if(!isFileToBeExcludedByFilename(path.basename(element.name)) && 
+                !isFileToBeExcludedByFormat(path.extname(element.name))) {
+                fileList.push(path.join(completePath, element.name));
+            } else {
+                console.log("Ignoring: " + element.name + " (excluded).")
+            }
+        } else {
+            console.warn("Ignoring: " + element.name + " (not a directory or file).");
+        }
+    });
 }
 
 /**
@@ -177,6 +236,7 @@ function getLanguages(content) {
  * Produce a Markdown table with the rows returned by the produceMarkdownRow function.
  * 
  * @param {*} filesArray 
+ * @param {*} tableHeader 
  */
 function produceMarkdownTable(filesArray, tableHeader = defaultTableHeader) {
     var table = null;
@@ -186,7 +246,7 @@ function produceMarkdownTable(filesArray, tableHeader = defaultTableHeader) {
 
     // Get each file to build the table.
     filesArray.forEach((element, index, array) => {
-        table += "|" + element[0] + "|" + element[1] + "|" + element[2][0] + "|\n"
+        table += "|[" + path.basename(element[0]) + "](" + element[0] + ")|" + element[1][0] + "|\n"
     });
 
     return table;
@@ -198,23 +258,35 @@ function produceMarkdownTable(filesArray, tableHeader = defaultTableHeader) {
  * @param {*} dir - The directory to write the file to.
  * @param {*} filename - The file name to be written.
  */
-function writeMarkdownToFile(dir = "./", filename = "Table.md", data = "No data provided.") {
+function writeMarkdownToFile(dir = "./", filename = tableFilename, data = "No data provided.") {
     return fs.writeFileSync(path.join(dir, filename), data, { encoding: "utf8", mode: 0o666, flag: "w" });
 }
 
 // Testing.
-setup("../docs/src", limitResultsTo = 5, onlyLanguages = ["eng", "spa"]);
-test();
-var table = produceMarkdownTable([
-    ["src", "README.md", [["spa", 1],["eng",0.9799729580755949]]],
-    ["src", "TEST.md", [["spa", 1],["eng",0.9799729580755949]]],
-    ["src", "CONTRIBUTING.md", [["spa", 1],["eng",0.9799729580755949]]]
-]);
-//console.log(table);
-writeMarkdownToFile("./", "Table.md", table);
+setup("../docs/src", limitResultsTo = 5, onlyLanguages = ["eng", "spa"], filesToExclude = [".gitkeep", ".gitignore"], 
+fileFormatsToExclude = [".mp4", ".ico", ".svg", ".js", ".jpg", ".png", ".vue", ".gif", ".styl", ".json", ".scss"]);
 
-async function test() {
-    var fileLocation = getFileList()[1].name;
-    var content = getFileContent(docsRootPath + "/" + fileLocation);
-    var languages = getLanguages(content);
+/**
+ * Make the whole process of analyzing files, detecting languages, 
+ * building the Markdown table and writing it to a file.
+ */
+function findAndDetect() {
+    var list, content, languages, table = null;
+
+    getFileList();
+    list = fileList;
+    fileList = [];
+    list.forEach((element, index, array) => {
+        content = getFileContent(element);
+        languages = getLanguages(content);
+        fileList.push([element, languages]);
+    });
+
+    table = produceMarkdownTable(fileList);
+
+    writeMarkdownToFile(tableFilenameDirectory, tableFilename, table);
+    
+    return true;
 }
+
+findAndDetect();
