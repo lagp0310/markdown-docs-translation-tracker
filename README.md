@@ -33,7 +33,7 @@ The idea behind this project is to have an automated tool that can keep track of
 
 2. Copy configuration file from `config.json.example`.
 
-    On Linux/OSX:
+    On Linux/OSX/WSL:
     ```bash
     cp config.json.example config.json
     ```
@@ -45,22 +45,39 @@ The idea behind this project is to have an automated tool that can keep track of
 
 3. Adapt the `config.json` file to your project.
 
-    The configuration for this tool is made in `config.json`. Here's a list of the current parameters that can be used:
+    By default, the configuration is read from `config.json` file. Only **required** parameters are needed to start using the tool, but the **optional** ones provide better options to fit your project. Here's a list of the current parameters that can be used:
 
-    - `docsRootPath (string)`: The root path of your documentation project in your local environment.
-    - `repositoryRootPath (string)`: The root path of the documentation in the repository.
-    - `recursive (boolean)`: Whether or not to search files in directories recursively.
-    - `directoriesToExclude (Array)`: Which directories to exclude when searching files.
-    - `filesToExclude (Array)`: Which files to exclude from the search. **Note**: These must have the dot before the file extension, for example `.css`.
-    - `fileFormatsToExclude (Array)`: Which file formats to exclude when searching files. **Note**: These must have the dot before the file extension, for example `.json`.
-    - `onlyFileFormats (Array)`: Only include these file formats when searching files. **Note**: These must have the dot before the file extension, for example `.md`.
-    - `onlyLanguages (Array)`: Only include these languages when making prediction of the language on files. **Note**: These must be in [ISO-639-3](https://github.com/wooorm/iso-639-3/blob/main/to-1.json) format (three letter code).
-    - `languagesToExclude (Array)`: Which languages to exclude when making prediction of the language on files. **Note**: These must be in [ISO-639-3](https://github.com/wooorm/iso-639-3/blob/main/to-1.json) format (three letter code).
-    - `limitResultsTo (Number)`: Limit languages results.
-    - `defaultTableHeader (string)`: Table header to use in the resulting table.
-    - `tableFilenameDirectory (string)`: Directory to place the resulting Markdown file.
-    - `tableFilename (string)`: Filename of the resulting Markdown file.
-    - `sortFirstLanguage (string | null)`: Which language to place at the top of the table. **Note**: This must be in [ISO-639-3](https://github.com/wooorm/iso-639-3/blob/main/to-1.json) format (three letter code).
+    - **Required** Parameters:
+
+        - `docsRootPath (string)`: The root path of your documentation project in your local environment. **Note**: If you're on Windows and not using [WSL](https://github.com/microsoft/WSL), please verify the path you provide is in Windows format as the example is provided with a Linux path.
+
+        - `repositoryRootPath (string)`: The root path of the documentation in the repository. **Note**: If you're on Windows and not using [WSL](https://github.com/microsoft/WSL), please verify the path you provide is in Windows format as the example is provided with a Linux path.
+
+    - **Optional** Parameters:
+
+        - `recursive (boolean)`: Whether or not to search files in directories recursively.  
+
+        - `directoriesToExclude (Array)`: Which directories to exclude when searching files.
+
+        - `filesToExclude (Array)`: Which files to exclude from the search. **Note**: These must have the dot before the file extension, for example `.css`.
+
+        - `fileFormatsToExclude (Array)`: Which file formats to exclude when searching files. **Note**: These must have the dot before the file extension, for example `.json`.
+
+        - `onlyFileFormats (Array)`: Only include these file formats when searching files. **Note**: These must have the dot before the file extension, for example `.md`.
+
+        - `onlyLanguages (Array)`: Only include these languages when making prediction of the language on files. **Note**: These must be in [ISO-639-3](https://github.com/wooorm/iso-639-3/blob/main/to-1.json) format (three letter code).
+
+        - `languagesToExclude (Array)`: Which languages to exclude when making prediction of the language on files. **Note**: These must be in [ISO-639-3](https://github.com/wooorm/iso-639-3/blob/main/to-1.json) format (three letter code).
+
+        - `limitResultsTo (Number)`: Limit languages results.
+
+        - `defaultTableHeader (string)`: Table header to use in the resulting table.
+
+        - `tableFilenameDirectory (string)`: Directory to place the resulting Markdown file. **Note**: If you're on Windows and not using [WSL](https://github.com/microsoft/WSL), please verify the path you provide is in Windows format as the example is provided with a Linux path.
+
+        - `tableFilename (string)`: Filename of the resulting Markdown file.
+
+        - `sortFirstLanguage (string | null)`: Which language to place at the top of the table. **Note**: This must be in [ISO-639-3](https://github.com/wooorm/iso-639-3/blob/main/to-1.json) format (three letter code).
 
     For default values, please check `config.json.example` file.
 
@@ -68,8 +85,15 @@ The idea behind this project is to have an automated tool that can keep track of
 
     After configuring the tool, you can run it using the following command:
 
+    On Linux/OSX/WSL:
     ```bash
     node src/main.js
+    ```
+
+    On Windows:
+    ```bash
+    cd src
+    node main.js
     ```
 
     It should generate a Markdown file with a table. For example, the following is an example table generated using part of the [Vue Docs Next](https://github.com/vuejs/docs-next) documentation:
@@ -77,7 +101,7 @@ The idea behind this project is to have an automated tool that can keep track of
     | Filename | Language
     |---|---|
     |[README.md](src/.vuepress/theme/README.md)|English|
-    |[README.md](src/README.md)|Spanish|
+    |[README.md](src/README.md)|English|
     |[application-api.md](src/api/application-api.md)|English|
     |[application-config.md](src/api/application-config.md)|English|
     |[basic-reactivity.md](src/api/basic-reactivity.md)|English|
