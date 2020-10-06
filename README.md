@@ -76,14 +76,14 @@ The idea behind this project is to have an automated tool that can keep track of
 
     | Filename | Language
     |---|---|
-    |[README.md](../docs/src/.vuepress/theme/README.md)|English|
-    |[README.md](../docs/src/README.md)|Spanish|
-    |[application-api.md](../docs/src/api/application-api.md)|English|
-    |[application-config.md](../docs/src/api/application-config.md)|English|
-    |[basic-reactivity.md](../docs/src/api/basic-reactivity.md)|English|
-    |[built-in-components.md](../docs/src/api/built-in-components.md)|English|
-    |[composition-api.md](../docs/src/api/composition-api.md)|English|
-    |[computed-watch-api.md](../docs/src/api/computed-watch-api.md)|English|
+    |[README.md](src/.vuepress/theme/README.md)|English|
+    |[README.md](src/README.md)|Spanish|
+    |[application-api.md](src/api/application-api.md)|English|
+    |[application-config.md](src/api/application-config.md)|English|
+    |[basic-reactivity.md](src/api/basic-reactivity.md)|English|
+    |[built-in-components.md](src/api/built-in-components.md)|English|
+    |[composition-api.md](src/api/composition-api.md)|English|
+    |[computed-watch-api.md](src/api/computed-watch-api.md)|English|
 
     This table provides direct access to each file in the repository and shows the most probable language for the contents of each file, according to [franc](https://github.com/wooorm/franc) library results. 
 
