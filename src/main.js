@@ -3,7 +3,7 @@ var path = require("path");
 var franc = require("franc");
 var iso6393 = require('iso-639-3');
 
-// TODO: Order languages, for example, first English and then others.
+// TODO: Order languages, for example, first English and then others (in table).
 // TODO: Percentage coverage in each file for each detected language.
 // TODO: Additionally to percentage in coverage, we should show how many words there are for each detected language (configurable how many languages are shown).
 // TODO: Implement function to exclude some text from the file (i.e. comments which needs to remain in English, or fragments with badges which are also English only).
@@ -93,6 +93,13 @@ var tableFilenameDirectory = "./";
 var tableFilename = "Table.md";
 
 /**
+ * Sort by language. Place this at the top of the table.
+ * 
+ * **Note**: This language is given in ISO-639-3 format (three letters).
+ */
+var sortFirstLanguage = null;
+
+/**
  * Global Variables.
  */
 
@@ -141,52 +148,57 @@ function setup(filename = configFilename) {
     }
 
     if(typeof directoriesToExclude != "object") {
-        console.error(jsonConfig.recursive + " must be an object.");
+        console.error(jsonConfig.directoriesToExclude + " must be an object.");
         return false;
     }
 
     if(typeof filesToExclude != "object") {
-        console.error(jsonConfig.recursive + " must be an object.");
+        console.error(jsonConfig.filesToExclude + " must be an object.");
         return false;
     }
 
     if(typeof fileFormatsToExclude != "object") {
-        console.error(jsonConfig.recursive + " must be an object.");
+        console.error(jsonConfig.fileFormatsToExclude + " must be an object.");
         return false;
     }
 
     if(typeof onlyFileFormats != "object") {
-        console.error(jsonConfig.recursive + " must be an object.");
+        console.error(jsonConfig.onlyFileFormats + " must be an object.");
         return false;
     }
 
     if(typeof onlyLanguages != "object") {
-        console.error(jsonConfig.recursive + " must be an object.");
+        console.error(jsonConfig.onlyLanguages + " must be an object.");
         return false;
     }
 
     if(typeof languagesToExclude != "object") {
-        console.error(jsonConfig.recursive + " must be an object.");
+        console.error(jsonConfig.languagesToExclude + " must be an object.");
         return false;
     }
 
     if(typeof limitResultsTo != "number") {
-        console.error(jsonConfig.recursive + " must be an object.");
+        console.error(jsonConfig.limitResultsTo + " must be a number.");
         return false;
     }
 
     if(typeof defaultTableHeader != "string") {
-        console.error(jsonConfig.recursive + " must be an object.");
+        console.error(jsonConfig.defaultTableHeader + " must be a string.");
         return false;
     }
 
     if(typeof tableFilenameDirectory != "string") {
-        console.error(jsonConfig.recursive + " must be an object.");
+        console.error(jsonConfig.tableFilenameDirectory + " must be a string.");
         return false;
     }
 
     if(typeof tableFilename != "string") {
-        console.error(jsonConfig.recursive + " must be an object.");
+        console.error(jsonConfig.tableFilename + " must be a string.");
+        return false;
+    }
+
+    if(typeof sortFirstLanguage != "string" && sortFirstLanguage != null) {
+        console.error(jsonConfig.sortFirstLanguage + " must be a string or be null.");
         return false;
     }
 
@@ -197,6 +209,11 @@ function setup(filename = configFilename) {
 
     if(onlyLanguages.length > 0) {
         languagesToExclude = [];
+    }
+
+    if(typeof sortFirstLanguage == "string" && sortFirstLanguage.length != 3) {
+        console.error("sortFirstLanguage config parameter must be in ISO-639-3 format (three letters) or be null.");
+        return false;
     }
 
     // Set configuration parameters.
@@ -212,6 +229,7 @@ function setup(filename = configFilename) {
     defaultTableHeader = jsonConfig.defaultTableHeader;
     tableFilenameDirectory = jsonConfig.tableFilenameDirectory;
     tableFilename = jsonConfig.tableFilename;
+    sortFirstLanguage = jsonConfig.sortFirstLanguage;
 
     return true;
 }
@@ -316,6 +334,31 @@ function getFileContent(file) {
 }
 
 /**
+ * Get long name language. By default, franc returns ISO-639-3 (language represented by
+ * three letter code), so we need to get something like "English" or "Spanish" which is 
+ * more human-readable in tables.
+ * 
+ * @param {*} language 
+ */
+function getLongNameLanguage(language) {
+    if(typeof language != "string") {
+        console.error("You must provide a string with the ISO-639-3 language code.");
+        return undefined;
+    }
+
+    var longNameLanguage = iso6393.find((value, index, array) => {
+        return value.iso6393 === language;
+    });
+
+    if(typeof longNameLanguage == "object") {
+        return longNameLanguage.name;
+    } else {
+        console.warn("Language: " + element[0] + " not found. Returning \'undefined\' for it.");
+        return undefined;
+    }
+}
+
+/**
  * Get long name languages. By default, franc returns ISO-639-3 (language represented by
  * three letter code), so we need to get something like "English" or "Spanish" which is 
  * more human-readable in tables.
@@ -379,6 +422,17 @@ function getLanguages(content) {
 }
 
 /**
+ * Sort this table by language, placing first the language defined by sort argument.
+ * 
+ * @param {*} table 
+ * @param {*} sortLanguage 
+ */
+// FIXME: Not implemented yet.
+function sortTableByLanguage(table, sortLanguage = sortFirstLanguage) {
+    return null;
+}
+
+/**
  * Produce a Markdown table with the rows returned by the produceMarkdownRow function.
  * 
  * @param {*} filesArray 
@@ -426,6 +480,11 @@ function findAndDetect() {
     });
 
     table = produceMarkdownTable(fileList);
+
+    /*if(sortFirstLanguage != null) {
+        table = sortTableByLanguage(table, sortFirstLanguage);
+        console.log(table);
+    }*/
 
     writeMarkdownToFile(tableFilenameDirectory, tableFilename, table);
     

@@ -10,5 +10,6 @@
     "limitResultsTo": -1,
     "defaultTableHeader": "| Filename | Language\n|---|---|\n",
     "tableFilenameDirectory": "./",
-    "tableFilename": "Table.md"
+    "tableFilename": "Table.md",
+    "sortFirstLanguage": "English"
 }
