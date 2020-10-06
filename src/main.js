@@ -26,6 +26,12 @@ var configFilename = "config.json";
 var docsRootPath = null;
 
 /**
+ * The root path for the repository in which the documentation is stored.
+ * This is to properly create links to each file.
+ */
+var repositoryRootPath = null;
+
+/**
  * Whether or not to find files recursively.
  */
 var recursive = true;
@@ -121,17 +127,7 @@ function readJSONConfigFile(filename = configFilename) {
 /**
  * This will setup the application with provided arguments.
  * 
- * @param {*} root 
- * @param {*} recursive 
- * @param {*} directoriesToExclude 
- * @param {*} filesToExclude 
- * @param {*} fileFormatsToExclude 
- * @param {*} onlyFileFormats 
- * @param {*} onlyLanguages 
- * @param {*} languagesToExclude 
- * @param {*} limitResultsTo 
- * @param {*} tableFilename 
- * @param {*} defaultTableHeader 
+ * @param {*} filename 
  */
 function setup(filename = configFilename) {
     var jsonConfig = readJSONConfigFile(filename);
@@ -142,82 +138,88 @@ function setup(filename = configFilename) {
         return false;
     }
 
-    if(typeof recursive != "boolean") {
+    if(typeof jsonConfig.repositoryRootPath != "string") {
+        console.error(jsonConfig.repositoryRootPath + " must be a string.");
+        return false;
+    }    
+
+    if(typeof jsonConfig.recursive != "boolean") {
         console.error(jsonConfig.recursive + " must be a boolean.");
         return false;
     }
 
-    if(typeof directoriesToExclude != "object") {
+    if(typeof jsonConfig.directoriesToExclude != "object") {
         console.error(jsonConfig.directoriesToExclude + " must be an object.");
         return false;
     }
 
-    if(typeof filesToExclude != "object") {
+    if(typeof jsonConfig.filesToExclude != "object") {
         console.error(jsonConfig.filesToExclude + " must be an object.");
         return false;
     }
 
-    if(typeof fileFormatsToExclude != "object") {
+    if(typeof jsonConfig.fileFormatsToExclude != "object") {
         console.error(jsonConfig.fileFormatsToExclude + " must be an object.");
         return false;
     }
 
-    if(typeof onlyFileFormats != "object") {
+    if(typeof jsonConfig.onlyFileFormats != "object") {
         console.error(jsonConfig.onlyFileFormats + " must be an object.");
         return false;
     }
 
-    if(typeof onlyLanguages != "object") {
+    if(typeof jsonConfig.onlyLanguages != "object") {
         console.error(jsonConfig.onlyLanguages + " must be an object.");
         return false;
     }
 
-    if(typeof languagesToExclude != "object") {
+    if(typeof jsonConfig.languagesToExclude != "object") {
         console.error(jsonConfig.languagesToExclude + " must be an object.");
         return false;
     }
 
-    if(typeof limitResultsTo != "number") {
+    if(typeof jsonConfig.limitResultsTo != "number") {
         console.error(jsonConfig.limitResultsTo + " must be a number.");
         return false;
     }
 
-    if(typeof defaultTableHeader != "string") {
+    if(typeof jsonConfig.defaultTableHeader != "string") {
         console.error(jsonConfig.defaultTableHeader + " must be a string.");
         return false;
     }
 
-    if(typeof tableFilenameDirectory != "string") {
+    if(typeof jsonConfig.tableFilenameDirectory != "string") {
         console.error(jsonConfig.tableFilenameDirectory + " must be a string.");
         return false;
     }
 
-    if(typeof tableFilename != "string") {
+    if(typeof jsonConfig.tableFilename != "string") {
         console.error(jsonConfig.tableFilename + " must be a string.");
         return false;
     }
 
-    if(typeof sortFirstLanguage != "string" && sortFirstLanguage != null) {
+    if(typeof jsonConfig.sortFirstLanguage != "string" && jsonConfig.sortFirstLanguage != null) {
         console.error(jsonConfig.sortFirstLanguage + " must be a string or be null.");
         return false;
     }
 
     // Check configuration and set default values where required.
-    if(onlyFileFormats.length > 0) {
+    if(jsonConfig.onlyFileFormats.length > 0) {
         fileFormatsToExclude = [];
     }
 
-    if(onlyLanguages.length > 0) {
+    if(jsonConfig.onlyLanguages.length > 0) {
         languagesToExclude = [];
     }
 
-    if(typeof sortFirstLanguage == "string" && sortFirstLanguage.length != 3) {
+    if(typeof jsonConfig.sortFirstLanguage == "string" && jsonConfig.sortFirstLanguage.length != 3) {
         console.error("sortFirstLanguage config parameter must be in ISO-639-3 format (three letters) or be null.");
         return false;
     }
 
     // Set configuration parameters.
     docsRootPath = jsonConfig.docsRootPath;
+    repositoryRootPath = jsonConfig.repositoryRootPath;
     recursive = jsonConfig.recursive;
     directoriesToExclude = jsonConfig.directoriesToExclude;
     filesToExclude = jsonConfig.filesToExclude;
@@ -444,9 +446,10 @@ function produceMarkdownTable(filesArray, tableHeader = defaultTableHeader) {
     // Set table header.
     table = tableHeader;
 
+    // FIXME: We need to get rid of relative paths to our docs folder and only take the relevant part for the repository.
     // Get each file to build the table.
     filesArray.forEach((element, index, array) => {
-        table += "|[" + path.basename(element[0]) + "](" + element[0] + ")|" + element[1][0][0] + "|\n"
+        table += "|[" + path.basename(element[0]) + "](" + element[0].replace(docsRootPath, repositoryRootPath) + ")|" + element[1][0][0] + "|\n"
     });
 
     return table;

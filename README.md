@@ -4,6 +4,25 @@
 
 A simple tool to keep tracking of translation of documentation written in Markdown. It uses [franc](https://github.com/wooorm/franc) as a library to detect languages on files and [iso-639-3](https://github.com/wooorm/iso-639-3) to get each language in a human-readable format.
 
+## Why?
+
+The idea behind this project is to have an automated tool that can keep track of which files are translated or not in a repository that contains documentation written in Markdown. This way, translation becomes a little bit easier. From the main Readme, the team can see file list and probable language of each file. The table also provides direct access to each file by creating a link to it and placing it into the table.
+
+## Features.
+
+- Recursively explore directories to detect the language for each file.
+- File Inclusion and Exclusion.
+- Directory Inclusion and Exclusion.
+- File Format (Extension) Inclusion and Exclusion.
+- Exclude languages from being detected.
+- Markdown Table generation with links to files in the repository.
+
+## Planned Features.
+
+- Sorting languages in table. For example, place all English files at the top.
+- Show words percentage on each detected language.
+- Text exclusion. For example, exclude English content that should not be translated (as some code).
+
 ## Getting Started.
 
 1. Install dependencies.
@@ -28,7 +47,8 @@ A simple tool to keep tracking of translation of documentation written in Markdo
 
     The configuration for this tool is made in `config.json`. Here's a list of the current parameters that can be used:
 
-    - `docsRootPath (string)`: The root path of your documentation project.
+    - `docsRootPath (string)`: The root path of your documentation project in your local environment.
+    - `repositoryRootPath (string)`: The root path of the documentation in the repository.
     - `recursive (boolean)`: Whether or not to search files in directories recursively.
     - `directoriesToExclude (Array)`: Which directories to exclude when searching files.
     - `filesToExclude (Array)`: Which files to exclude from the search. **Note**: These must have the dot before the file extension, for example `.css`.
@@ -66,6 +86,10 @@ A simple tool to keep tracking of translation of documentation written in Markdo
     |[computed-watch-api.md](../docs/src/api/computed-watch-api.md)|English|
 
     This table provides direct access to each file in the repository and shows the most probable language for the contents of each file, according to [franc](https://github.com/wooorm/franc) library results. 
+
+## Contributing.
+
+See [CONTRIBUTING](CONTRIBUTING.md).
 
 ## License.
 
