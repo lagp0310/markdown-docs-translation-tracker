@@ -3,6 +3,7 @@ var path = require("path");
 var franc = require("franc");
 var iso6393 = require('iso-639-3');
 
+// TODO: Write tests (another branch).
 // TODO: Order languages, for example, first English and then others (in table).
 // TODO: Percentage coverage in each file for each detected language.
 // TODO: Additionally to percentage in coverage, we should show how many words there are for each detected language (configurable how many languages are shown).
@@ -106,6 +107,12 @@ var tableFilename = "Table.md";
 var sortFirstLanguage = null;
 
 /**
+ * Desired language on each file.
+ * This is to place an emoji to identify faster all translated files.
+ */
+var desiredLanguage = null;
+
+/**
  * Global Variables.
  */
 
@@ -203,6 +210,11 @@ function setup(filename = configFilename) {
         return false;
     }
 
+    if(typeof jsonConfig.desiredLanguage != "string" && jsonConfig.desiredLanguage != null) {
+        console.error(jsonConfig.desiredLanguage + " must be a string or null.");
+        return false;
+    }
+
     // Check configuration and set default values where required.
     if(jsonConfig.onlyFileFormats.length > 0) {
         fileFormatsToExclude = [];
@@ -214,6 +226,11 @@ function setup(filename = configFilename) {
 
     if(typeof jsonConfig.sortFirstLanguage == "string" && jsonConfig.sortFirstLanguage.length != 3) {
         console.error("sortFirstLanguage config parameter must be in ISO-639-3 format (three letters) or be null.");
+        return false;
+    }
+
+    if(typeof jsonConfig.desiredLanguage == "string" && jsonConfig.desiredLanguage.length != 3) {
+        console.error("desiredLanguage config parameter must be in ISO-639-3 format (three letters) or be null.");
         return false;
     }
 
@@ -232,6 +249,7 @@ function setup(filename = configFilename) {
     tableFilenameDirectory = jsonConfig.tableFilenameDirectory;
     tableFilename = jsonConfig.tableFilename;
     sortFirstLanguage = jsonConfig.sortFirstLanguage;
+    desiredLanguage = jsonConfig.desiredLanguage;
 
     return true;
 }
@@ -355,7 +373,7 @@ function getLongNameLanguage(language) {
     if(typeof longNameLanguage == "object") {
         return longNameLanguage.name;
     } else {
-        console.warn("Language: " + element[0] + " not found. Returning \'undefined\' for it.");
+        console.warn("Language not found. Returning \'undefined\' for it.");
         return undefined;
     }
 }
@@ -441,15 +459,22 @@ function sortTableByLanguage(table, sortLanguage = sortFirstLanguage) {
  * @param {*} tableHeader 
  */
 function produceMarkdownTable(filesArray, tableHeader = defaultTableHeader) {
-    var table = null;
+    var table = null, emoji = null, longLanguage = getLongNameLanguage(desiredLanguage);
 
     // Set table header.
     table = tableHeader;
 
-    // FIXME: We need to get rid of relative paths to our docs folder and only take the relevant part for the repository.
     // Get each file to build the table.
     filesArray.forEach((element, index, array) => {
-        table += "|[" + path.basename(element[0]) + "](" + element[0].replace(docsRootPath, repositoryRootPath) + ")|" + element[1][0][0] + "|\n"
+        if(desiredLanguage != null) {
+            emoji = " " + (element[1][0][0] == longLanguage ? ":heavy_check_mark:" : ":x:");
+        } else {
+            emoji = "";
+        }
+
+        table += "|[" + path.basename(element[0]) + "](" + element[0].replace(docsRootPath, repositoryRootPath) + ")|" + 
+        element[1][0][0] + emoji +
+        "|\n"
     });
 
     return table;
