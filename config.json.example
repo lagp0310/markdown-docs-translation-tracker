@@ -11,5 +11,5 @@
     "defaultTableHeader": "| Filename | Language\n|---|---|\n",
     "tableFilenameDirectory": "./",
     "tableFilename": "Table.md",
-    "sortFirstLanguage": "English"
+    "sortFirstLanguage": "eng"
 }
