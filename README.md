@@ -52,7 +52,20 @@ A simple tool to keep tracking of translation of documentation written in Markdo
     node src/main.js
     ```
 
-    It should generate a Markdown file in the specified directory with a table.
+    It should generate a Markdown file with a table. For example, the following is an example table generated using part of the [Vue Docs Next](https://github.com/vuejs/docs-next) documentation:
+
+    | Filename | Language
+    |---|---|
+    |[README.md](../docs/src/.vuepress/theme/README.md)|English|
+    |[README.md](../docs/src/README.md)|Spanish|
+    |[application-api.md](../docs/src/api/application-api.md)|English|
+    |[application-config.md](../docs/src/api/application-config.md)|English|
+    |[basic-reactivity.md](../docs/src/api/basic-reactivity.md)|English|
+    |[built-in-components.md](../docs/src/api/built-in-components.md)|English|
+    |[composition-api.md](../docs/src/api/composition-api.md)|English|
+    |[computed-watch-api.md](../docs/src/api/computed-watch-api.md)|English|
+
+    This table provides direct access to each file in the repository and shows the most probable language for the contents of each file, according to [franc](https://github.com/wooorm/franc) library results. 
 
 ## License.
 
