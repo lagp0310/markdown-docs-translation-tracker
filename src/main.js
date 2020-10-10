@@ -4,10 +4,8 @@ var franc = require("franc");
 var iso6393 = require('iso-639-3');
 
 // TODO: Write tests (another branch).
-// TODO: Proper validation for function arguments.
 // TODO: Percentage coverage in each file for each detected language.
 // TODO: Additionally to percentage in coverage, we should show how many words there are for each detected language (configurable how many languages are shown).
-// TODO: Implement function to exclude some text from the file (i.e. comments which needs to remain in English, or fragments with badges which are also English only).
 // TODO: Regexp matching for file names.
 
 /**
@@ -113,6 +111,11 @@ var sortFirstLanguage = null;
 var desiredLanguage = null;
 
 /**
+ * Which words to exclude from text analysis.
+ */
+var excludeWords = [];
+
+/**
  * Global Variables.
  */
 
@@ -141,81 +144,86 @@ function setup(filename = configFilename) {
 
     // Check arguments provided in configuration file.
     if(!fs.existsSync(jsonConfig.docsRootPath)) {
-        console.error(jsonConfig.docsRootPath + " does not exist.");
+        console.error("docsRootPath does not exist.");
         return false;
     }
 
     if(typeof jsonConfig.repositoryRootPath != "string") {
-        console.error(jsonConfig.repositoryRootPath + " must be a string.");
+        console.error("repositoryRootPath must be a string.");
         return false;
     }    
 
     if(typeof jsonConfig.recursive != "boolean") {
-        console.error(jsonConfig.recursive + " must be a boolean.");
+        console.error("recursive must be a boolean.");
         return false;
     }
 
-    if(typeof jsonConfig.directoriesToExclude != "object") {
-        console.error(jsonConfig.directoriesToExclude + " must be an object.");
+    if(!Array.isArray(jsonConfig.directoriesToExclude)) {
+        console.error("directoriesToExclude must be an array.");
         return false;
     }
 
-    if(typeof jsonConfig.filesToExclude != "object") {
-        console.error(jsonConfig.filesToExclude + " must be an object.");
+    if(!Array.isArray(jsonConfig.filesToExclude)) {
+        console.error("filesToExclude must be an array.");
         return false;
     }
 
-    if(typeof jsonConfig.fileFormatsToExclude != "object") {
-        console.error(jsonConfig.fileFormatsToExclude + " must be an object.");
+    if(!Array.isArray(jsonConfig.fileFormatsToExclude)) {
+        console.error("fileFormatsToExclude must be an array.");
         return false;
     }
 
-    if(typeof jsonConfig.onlyFileFormats != "object") {
-        console.error(jsonConfig.onlyFileFormats + " must be an object.");
+    if(!Array.isArray(jsonConfig.onlyFileFormats)) {
+        console.error("onlyFileFormats must be an array.");
         return false;
     }
 
-    if(typeof jsonConfig.onlyLanguages != "object") {
-        console.error(jsonConfig.onlyLanguages + " must be an object.");
+    if(!Array.isArray(jsonConfig.onlyLanguages)) {
+        console.error("onlyLanguages must be an array.");
         return false;
     }
 
-    if(typeof jsonConfig.languagesToExclude != "object") {
-        console.error(jsonConfig.languagesToExclude + " must be an object.");
+    if(!Array.isArray(jsonConfig.languagesToExclude)) {
+        console.error("languagesToExclude must be an array.");
         return false;
     }
 
     if(typeof jsonConfig.limitResultsTo != "number") {
-        console.error(jsonConfig.limitResultsTo + " must be a number.");
+        console.error("limitResultsTo must be a number.");
         return false;
     }
 
     if(typeof jsonConfig.defaultTableHeader != "string") {
-        console.error(jsonConfig.defaultTableHeader + " must be a string.");
+        console.error("defaultTableHeader must be a string.");
         return false;
     }
 
     if(typeof jsonConfig.tableFilenameDirectory != "string") {
-        console.error(jsonConfig.tableFilenameDirectory + " must be a string.");
+        console.error("tableFilenameDirectory must be a string.");
         return false;
     }
 
     if(typeof jsonConfig.tableFilename != "string") {
-        console.error(jsonConfig.tableFilename + " must be a string.");
+        console.error("tableFilename must be a string.");
         return false;
     }
 
     if(typeof jsonConfig.sortFirstLanguage != "string" && jsonConfig.sortFirstLanguage != null) {
-        console.error(jsonConfig.sortFirstLanguage + " must be a string or be null.");
+        console.error("sortFirstLanguage must be a string or be null.");
         return false;
     }
 
     if(typeof jsonConfig.desiredLanguage != "string" && jsonConfig.desiredLanguage != null) {
-        console.error(jsonConfig.desiredLanguage + " must be a string or null.");
+        console.error("desiredLanguage must be a string or null.");
         return false;
     }
 
-    // Check configuration and set default values where required.
+    if(!Array.isArray(jsonConfig.excludeWords)) {
+        console.error("excludeWords must be an array.");
+        return false;
+    }
+
+    // Check configuration and set default values or show errors where required.
     if(jsonConfig.onlyFileFormats.length > 0) {
         fileFormatsToExclude = [];
     }
@@ -250,6 +258,7 @@ function setup(filename = configFilename) {
     tableFilename = jsonConfig.tableFilename;
     sortFirstLanguage = jsonConfig.sortFirstLanguage;
     desiredLanguage = jsonConfig.desiredLanguage;
+    excludeWords = jsonConfig.excludeWords;
 
     return true;
 }
@@ -261,7 +270,7 @@ function setup(filename = configFilename) {
  * @param {*} filename 
  */
 function isFileToBeExcludedByFilename(filename) {
-    return !(filesToExclude.find((value, index, array) => {
+    return !(filesToExclude.find((value) => {
         return value === filename;
     }) === undefined);
 }
@@ -273,7 +282,7 @@ function isFileToBeExcludedByFilename(filename) {
  * @param {*} format 
  */
 function isFileToBeExcludedByFormat(format) {
-    return !(fileFormatsToExclude.find((value, index, array) => {
+    return !(fileFormatsToExclude.find((value) => {
         return value === format;
     }) === undefined);
 }
@@ -284,7 +293,7 @@ function isFileToBeExcludedByFormat(format) {
  * @param {*} format 
  */
 function isFileFormatToBeIncluded(format) {
-    return !(onlyFileFormats.find((value, index, array) => {
+    return !(onlyFileFormats.find((value) => {
         return value === format;
     }) === undefined);
 }
@@ -295,7 +304,7 @@ function isFileFormatToBeIncluded(format) {
  * @param {*} dirname 
  */
 function isDirectoryToBeExcluded(dirname) {
-    return !(directoriesToExclude.find((value, index, array) => {
+    return !(directoriesToExclude.find((value) => {
         return value === dirname;
     }) === undefined);
 }
@@ -310,8 +319,8 @@ function getFileList(relativeRootPath = docsRootPath, ...joinPath) {
     var completePath = relativeRootPath, dirsAndFiles = null;
 
     // Check if joinPath argument was provided.
-    if(typeof joinPath == "object" && joinPath.length > 0) {
-        joinPath.forEach((element, index, array) => {
+    if(Array.isArray(joinPath) && joinPath.length > 0) {
+        joinPath.forEach((element) => {
             completePath = path.join(completePath, element);
         });
     }
@@ -319,7 +328,7 @@ function getFileList(relativeRootPath = docsRootPath, ...joinPath) {
     // Read the root directory.
     dirsAndFiles = fs.readdirSync(completePath, { encoding: "utf8", withFileTypes: true }) || [];
 
-    dirsAndFiles.forEach((element, index, array) => {
+    dirsAndFiles.forEach((element) => {
         if(element.isDirectory() && 
             recursive === true && 
             !isDirectoryToBeExcluded(element.name)) {
@@ -366,7 +375,7 @@ function getLongNameLanguage(language) {
         return undefined;
     }
 
-    var longNameLanguage = iso6393.find((value, index, array) => {
+    var longNameLanguage = iso6393.find((value) => {
         return value.iso6393 === language;
     });
 
@@ -386,15 +395,15 @@ function getLongNameLanguage(language) {
  * @param {*} languagesArray 
  */
 function getLongNameLanguages(languagesArray) {
-    if(typeof languagesArray != "object" || languagesArray.length === 0) {
+    if(!Array.isArray(languagesArray) || languagesArray.length === 0) {
         console.error("You must provide an array with languages.");
         return [];
     }
 
     var longNameLanguage = null;
 
-    languagesArray.forEach((element, index, array) => {
-        longNameLanguage = iso6393.find((value, index, array) => {
+    languagesArray.forEach((element) => {
+        longNameLanguage = iso6393.find((value) => {
             return value.iso6393 === element[0];
         });
 
@@ -448,6 +457,11 @@ function getLanguages(content) {
  * @param {*} sortLanguage 
  */
 function sortFilesByLanguage(fileList, sortLanguage = sortFirstLanguage) {
+    if(!Array.isArray(fileList) || fileList.length === 0) {
+        console.error("You must provide a fileList as array. Returning unchanged provided fileList.");
+        return fileList;
+    }
+
     var longLanguageName = null;
     longLanguageName = getLongNameLanguage(sortLanguage);
 
@@ -469,13 +483,18 @@ function sortFilesByLanguage(fileList, sortLanguage = sortFirstLanguage) {
  * @param {*} tableHeader 
  */
 function produceMarkdownTable(filesArray, tableHeader = defaultTableHeader) {
+    if(!Array.isArray(filesArray) || filesArray.length === 0) {
+        console.error("You must provide a filesArray as array. Returning null.");
+        return null;
+    }
+
     var table = null, emoji = null, longLanguage = getLongNameLanguage(desiredLanguage);
 
     // Set table header.
     table = tableHeader;
 
     // Get each file to build the table.
-    filesArray.forEach((element, index, array) => {
+    filesArray.forEach((element) => {
         if(desiredLanguage != null) {
             emoji = " " + (element[1][0][0] == longLanguage ? ":heavy_check_mark:" : ":x:");
         } else {
@@ -501,6 +520,36 @@ function writeMarkdownToFile(dir = "./", filename = tableFilename, data = "No da
 }
 
 /**
+ * Extract words from text, so it won't be analyzed.
+ * Use cases: Extracting English only text such as framework dependent code.
+ * 
+ * @param {*} words 
+ * @param {*} text 
+ */
+function extractWordsFromAnalysis(words, text) {
+    if(!Array.isArray(words) || words.length === 0) {
+        console.error("words must be a non-empty array. Returning text without changes.");
+        return text;
+    }
+
+    var wordsRegexp = "(";
+    
+    words.forEach((element, index, array) => {
+        wordsRegexp += element;
+
+        if(index !== (array.length - 1)) {
+            wordsRegexp +=  "|";
+        }
+    });
+
+    wordsRegexp += ")";
+
+    const WORDS_REGEXP = new RegExp(wordsRegexp, "g");
+
+    return text.replace(WORDS_REGEXP, "");
+}
+
+/**
  * Make the whole process of analyzing files, detecting languages, 
  * building the Markdown table and writing it to a file.
  */
@@ -510,8 +559,13 @@ function findAndDetect() {
     getFileList();
     list = fileList;
     fileList = [];
-    list.forEach((element, index, array) => {
+    list.forEach((element) => {
         content = getFileContent(element);
+
+        if(excludeWords.length > 0) {
+            content = extractWordsFromAnalysis(excludeWords, content);
+        }
+
         languages = getLanguages(content);
         longNameLanguages = getLongNameLanguages(languages);
         fileList.push([element, languages]);

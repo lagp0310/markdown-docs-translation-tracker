@@ -13,5 +13,6 @@
     "tableFilenameDirectory": "./",
     "tableFilename": "Table.md",
     "sortFirstLanguage": "eng",
-    "desiredLanguage": "spa"
+    "desiredLanguage": "spa",
+    "excludeWords": ["test", "tip", "badge"]
 }
