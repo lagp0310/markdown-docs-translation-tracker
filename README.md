@@ -83,7 +83,7 @@ The idea behind this project is to have an automated tool that can keep track of
         
         - `excludeWords (Array)`: An Array containing which words to exclude from text analysis. For example, you could exclude some code that need to remain in English in Markdown files.
 
-    For default values, please check `config.json.example` file.
+    For default values, please check [config.json.example](config.json.example) file.
 
 4. Run.
 
@@ -102,7 +102,7 @@ The idea behind this project is to have an automated tool that can keep track of
 
     It should generate a Markdown file with a table. For example, the following is an example table generated using part of the [Vue Docs Next](https://github.com/vuejs/docs-next) documentation:
 
-    | Archivo | Idioma
+    | Filename | Language
     |---|---|
     |[README.md](src/.vuepress/theme/README.md)|English :x:|
     |[README.md](src/README.md)|Spanish :heavy_check_mark:|
