@@ -4,12 +4,15 @@
   "description": "A small tool that takes Markdown Docs, get the percentage of translation for them and output a Markdown table with the status.",
   "main": "src/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "author": "Luis Alberto",
   "license": "MIT",
   "dependencies": {
     "franc": "^5.0.0",
     "iso-639-3": "^2.1.0"
+  },
+  "devDependencies": {
+    "jest": "^26.5.2"
   }
 }

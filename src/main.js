@@ -4,7 +4,7 @@ var franc = require("franc");
 var iso6393 = require('iso-639-3');
 
 // TODO: Write tests (another branch).
-// TODO: Order languages, for example, first English and then others (in table).
+// TODO: Proper validation for function arguments.
 // TODO: Percentage coverage in each file for each detected language.
 // TODO: Additionally to percentage in coverage, we should show how many words there are for each detected language (configurable how many languages are shown).
 // TODO: Implement function to exclude some text from the file (i.e. comments which needs to remain in English, or fragments with badges which are also English only).
@@ -442,14 +442,24 @@ function getLanguages(content) {
 }
 
 /**
- * Sort this table by language, placing first the language defined by sort argument.
+ * Sort this files list by language, placing first the language defined by sortLanguage argument.
  * 
- * @param {*} table 
+ * @param {*} fileList 
  * @param {*} sortLanguage 
  */
-// FIXME: Not implemented yet.
-function sortTableByLanguage(table, sortLanguage = sortFirstLanguage) {
-    return null;
+function sortFilesByLanguage(fileList, sortLanguage = sortFirstLanguage) {
+    var longLanguageName = null;
+    longLanguageName = getLongNameLanguage(sortLanguage);
+
+    return fileList.sort((a, b) => {
+        if(a[1][0][0].indexOf(longLanguageName) != -1 && b[1][0][0].indexOf(longLanguageName) == -1) {
+            return -1;
+        } else if(a[1][0][0].indexOf(longLanguageName) == -1 && b[1][0][0].indexOf(longLanguageName) != -1) {
+            return 1;
+        }
+        
+        return 0;
+    });
 }
 
 /**
@@ -507,12 +517,11 @@ function findAndDetect() {
         fileList.push([element, languages]);
     });
 
-    table = produceMarkdownTable(fileList);
+    if(sortFirstLanguage != null) {
+        table = sortFilesByLanguage(fileList, sortFirstLanguage);
+    }
 
-    /*if(sortFirstLanguage != null) {
-        table = sortTableByLanguage(table, sortFirstLanguage);
-        console.log(table);
-    }*/
+    table = produceMarkdownTable(fileList);
 
     writeMarkdownToFile(tableFilenameDirectory, tableFilename, table);
     
