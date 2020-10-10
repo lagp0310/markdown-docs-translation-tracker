@@ -16,12 +16,12 @@ The idea behind this project is to have an automated tool that can keep track of
 - File Format (Extension) Inclusion and Exclusion.
 - Exclude languages from being detected.
 - Markdown Table generation with links to files in the repository.
+- Sorting languages in table. For example, place all English files at the top.
+- Text exclusion. For example, exclude English content that should not be translated (as some code).
 
 ## Planned Features.
 
-- Sorting languages in table. For example, place all English files at the top.
 - Show words percentage on each detected language.
-- Text exclusion. For example, exclude English content that should not be translated (as some code).
 
 ## Getting Started.
 
@@ -80,6 +80,8 @@ The idea behind this project is to have an automated tool that can keep track of
         - `sortFirstLanguage (string | null)`: Which language to place at the top of the table. **Note**: This must be in [ISO-639-3](https://github.com/wooorm/iso-639-3/blob/main/to-1.json) format (three letter code).
 
         - `desiredLanguage (string | null)`: Which language is the target language for translations. This is to place an emoji so translated and pending for translation files can be easily seen. For example, if your documentation is in English (eng) and needs to be translated to Spanish (spa), this parameter should be set to "spa" (Spanish). **Note**: This must be in [ISO-639-3](https://github.com/wooorm/iso-639-3/blob/main/to-1.json) format (three letter code).
+        
+        - `excludeWords (Array)`: An Array containing which words to exclude from text analysis. For example, you could exclude some code that need to remain in English in Markdown files.
 
     For default values, please check `config.json.example` file.
 
